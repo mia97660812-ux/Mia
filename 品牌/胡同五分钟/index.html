@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>午后三点 · 胡同</title>
+<style>
+  /* ===== Reset & Base ===== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    background: #F5F0EB;
+    color: #2C2C2C;
+    overflow-x: hidden;
+  }
+
+  /* ===== Scroll Container ===== */
+  .scroll-container {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
+  .scroll-container::-webkit-scrollbar { display: none; }
+  .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .section {
+    height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== Progress Dots ===== */
+  .nav-dots {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #D4C9BE;
+    border: none;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    padding: 0;
+  }
+  .nav-dot.active { background: #C4956A; transform: scale(1.4); }
+  .nav-dot:hover { background: #C4956A; }
+
+  /* ===== Scroll Hint ===== */
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #8B8178;
+    font-size: 12px;
+    letter-spacing: 2px;
+    animation: fadeInUp 1s ease 1.5s both, float 2.5s ease-in-out infinite 2.5s;
+  }
+  .scroll-hint .line {
+    width: 1px; height: 32px;
+    background: #C4A882;
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.2; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* ===== Scene Text ===== */
+  .scene-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #C4A882;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 10;
+  }
+  .scene-title {
+    font-size: 36px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    color: #3D3A36;
+    position: relative;
+    z-index: 10;
+  }
+  .scene-poem {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+    font-size: 15px;
+    color: #8B8178;
+    line-height: 1.9;
+    text-align: center;
+    margin-top: 20px;
+    position: relative;
+    z-index: 10;
+  }
+  .scene-text-group {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .section.visible .scene-text-group { opacity: 1; }
+
+  /* ===== HERO ===== */
+  #hero {
+    background: #F5F0EB;
+  }
+  #hero h1 {
+    font-size: clamp(32px, 6vw, 64px);
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: #3D3A36;
+    text-align: center;
+    line-height: 1.4;
+    opacity: 0;
+    animation: heroFadeIn 2s ease 0.5s both;
+  }
+  #hero .sub {
+    font-size: clamp(14px, 2vw, 18px);
+    color: #8B8178;
+    margin-top: 16px;
+    letter-spacing: 6px;
+    font-weight: 300;
+    opacity: 0;
+    animation: heroFadeIn 2s ease 1s both;
+  }
+  #hero .brand-tagline {
+    margin-top: 40px;
+    font-size: 14px;
+    color: #C4A882;
+    letter-spacing: 3px;
+    font-weight: 400;
+    opacity: 0;
+    animation: heroFadeIn 2s ease 1.5s both;
+  }
+  @keyframes heroFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Scene 1: 鸽哨 ===== */
+  #scene-pigeon {
+    background: linear-gradient(180deg, #EDE6DC 0%, #F5F0EB 60%, #F0EAE2 100%);
+  }
+  .pigeon-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  /* ===== Scene 2: 槐荫 ===== */
+  #scene-tree {
+    background: #F0F0E8;
+  }
+  .tree-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  /* ===== Scene 3: 推门 ===== */
+  #scene-door {
+    background: #E8E0D6;
+  }
+  .door-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    cursor: pointer;
+  }
+  .door-click-hint {
+    position: absolute;
+    bottom: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    color: #8B8178;
+    font-size: 12px;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.6s;
+    pointer-events: none;
+  }
+  #scene-door.visible .door-click-hint { opacity: 1; }
+
+  /* ===== Scene 4: 门墩 ===== */
+  #scene-stone {
+    background: #EDE6DC;
+  }
+  .stone-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  /* ===== Footer ===== */
+  #footer {
+    background: #3D3A36;
+    color: #D4C9BE;
+  }
+  #footer .footer-text {
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+  #footer .footer-text p {
+    font-size: 14px;
+    letter-spacing: 2px;
+    line-height: 2;
+    font-weight: 300;
+  }
+  #footer .footer-text .highlight {
+    color: #D4A574;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 600px) {
+    .scene-title { font-size: 28px; letter-spacing: 4px; }
+    .scene-poem { font-size: 13px; }
+    .nav-dots { right: 12px; gap: 10px; }
+    .nav-dot { width: 6px; height: 6px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Navigation Dots -->
+  <nav class="nav-dots" aria-label="场景导航">
+    <button class="nav-dot active" data-index="0" aria-label="顶部"></button>
+    <button class="nav-dot" data-index="1" aria-label="鸽哨"></button>
+    <button class="nav-dot" data-index="2" aria-label="槐荫"></button>
+    <button class="nav-dot" data-index="3" aria-label="推门"></button>
+    <button class="nav-dot" data-index="4" aria-label="门墩"></button>
+    <button class="nav-dot" data-index="5" aria-label="结尾"></button>
+  </nav>
+
+  <div class="scroll-container" id="scrollContainer">
+
+    <!-- ===== HERO ===== -->
+    <section class="section" id="hero" data-scene="hero">
+      <h1>午后三点</h1>
+      <p class="sub">Wǔ Hòu Sān Diǎn</p>
+      <p class="brand-tagline">帮你在胡同里多待五分钟</p>
+      <div class="scroll-hint">
+        <span>向下滑动</span>
+        <div class="line"></div>
+      </div>
+    </section>
+
+    <!-- ===== Scene 1: 鸽哨 ===== -->
+    <section class="section" id="scene-pigeon" data-scene="pigeon">
+      <canvas class="pigeon-canvas" id="pigeonCanvas"></canvas>
+      <div class="scene-text-group">
+        <p class="scene-label">声 音</p>
+        <h2 class="scene-title">鸽 哨</h2>
+        <p class="scene-poem">
+          头顶上，鸽群画着看不见的圆。<br>
+          嗡嗡声由远及近，又从耳边滑走——<br>
+          那是北京天空独有的呼吸。
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== Scene 2: 槐荫 ===== -->
+    <section class="section" id="scene-tree" data-scene="tree">
+      <canvas class="tree-canvas" id="treeCanvas"></canvas>
+      <div class="scene-text-group">
+        <p class="scene-label">光 影</p>
+        <h2 class="scene-title">槐 荫</h2>
+        <p class="scene-poem">
+          槐树把阳光切碎了，<br>
+          洒在地上、墙头、你的肩上。<br>
+          夏天是被蝉鸣拉长的。
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== Scene 3: 推门 ===== -->
+    <section class="section" id="scene-door" data-scene="door">
+      <canvas class="door-canvas" id="doorCanvas"></canvas>
+      <p class="door-click-hint">✦ 点击开门 ✦</p>
+      <div class="scene-text-group">
+        <p class="scene-label">触 摸</p>
+        <h2 class="scene-title">推 门</h2>
+        <p class="scene-poem">
+          "——跨过门槛，就是另一个时间。"<br>
+          门轴吱呀一声，院子里的光阴<br>
+          比外面慢了半拍。
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== Scene 4: 门墩 ===== -->
+    <section class="section" id="scene-stone" data-scene="stone">
+      <canvas class="stone-canvas" id="stoneCanvas"></canvas>
+      <div class="scene-text-group">
+        <p class="scene-label">痕 迹</p>
+        <h2 class="scene-title">门 墩</h2>
+        <p class="scene-poem">
+          石头的棱角被岁月磨圆了，<br>
+          摸上去，有夏天坐过的温度。<br>
+          多少双脚在它身边停过，它都记得。
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== Footer ===== -->
+    <section class="section" id="footer" data-scene="footer">
+      <div class="footer-text">
+        <p>在胡同里多待五分钟</p>
+        <p style="margin-top:12px; font-size:12px; color:#8B8178;">
+          你会发现，城市还有另一种时间
+        </p>
+      </div>
+    </section>
+
+  </div>
+
+<script>
+/* ==============================================================
+   Audio Engine — Web Audio API 合成胡同音景
+   ============================================================== */
+class AudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.nodes = {};
+    this.active = {};
+  }
+
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  /* 鸽哨 — 正弦波频率 sweep + 颤音 */
+  startPigeonWhistle() {
+    this.init();
+    const id = 'pigeon';
+    this.stop(id);
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const vibrato = this.ctx.createOscillator();
+    const vibGain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(500, this.ctx.currentTime);
+
+    // Vibrato: LFO modulating frequency
+    vibrato.frequency.setValueAtTime(6, this.ctx.currentTime); // 6 Hz wobble
+    vibGain.gain.setValueAtTime(30, this.ctx.currentTime); // ±30Hz deviation
+
+    vibrato.connect(vibGain);
+    vibGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.08, this.ctx.currentTime + 0.5);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    vibrato.start();
+
+    this.nodes[id] = { osc, gain, vibrato, vibGain };
+    this.active[id] = true;
+
+    // Continuous frequency sweep
+    this._pigeonSweep(id);
+  }
+
+  _pigeonSweep(id) {
+    if (!this.active[id] || !this.nodes[id]) return;
+    const osc = this.nodes[id].osc;
+    const now = this.ctx.currentTime;
+    const baseFreq = 400 + Math.random() * 400;
+    osc.frequency.setTargetAtTime(baseFreq, now, 0.5);
+    const delay = 1500 + Math.random() * 2000;
+    setTimeout(() => this._pigeonSweep(id), delay);
+  }
+
+  updatePigeonWhistle(mouseX) {
+    // Mouse X modulates the vibrato rate (speed of wing beats)
+    if (!this.active.pigeon || !this.nodes.pigeon) return;
+    const t = mouseX / window.innerWidth; // 0–1
+    const rate = 3 + t * 10; // 3–13 Hz
+    this.nodes.pigeon.vibrato.frequency.setTargetAtTime(
+      rate, this.ctx.currentTime, 0.1
+    );
+  }
+
+  /* 风吹树叶 — 噪声通过带通滤波器 + LFO */
+  startWind() {
+    this.init();
+    const id = 'wind';
+    this.stop(id);
+
+    const bufferSize = this.ctx.sampleRate * 2;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+    filter.Q.setValueAtTime(0.8, this.ctx.currentTime);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.03, this.ctx.currentTime + 1);
+
+    // LFO modulates filter frequency
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    lfo.frequency.setValueAtTime(0.3, this.ctx.currentTime);
+    lfoGain.gain.setValueAtTime(400, this.ctx.currentTime);
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    source.start();
+    lfo.start();
+
+    this.nodes[id] = { source, filter, gain, lfo, lfoGain };
+    this.active[id] = true;
+  }
+
+  /* 蝉鸣 — 双高频振荡器 + 颤音 */
+  startCicadas() {
+    this.init();
+    const id = 'cicadas';
+    this.stop(id);
+
+    const createCicada = (freq) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const tremolo = this.ctx.createOscillator();
+      const tremGain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+      tremolo.frequency.setValueAtTime(4 + Math.random() * 2, this.ctx.currentTime);
+      tremGain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.005, this.ctx.currentTime);
+
+      tremolo.connect(tremGain);
+      tremGain.connect(gain.gain);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      tremolo.start();
+
+      return { osc, gain, tremolo, tremGain };
+    };
+
+    this.nodes[`${id}_1`] = createCicada(4500);
+    this.nodes[`${id}_2`] = createCicada(5200);
+    this.nodes[`${id}_3`] = createCicada(3800);
+    this.active[id] = true;
+  }
+
+  /* 门轴声 — 一次性噪声爆发 */
+  playDoorCreak() {
+    this.init();
+    const id = 'doorCreak_' + Date.now();
+
+    const bufferSize = this.ctx.sampleRate * 1.5;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.3);
+    filter.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 1.2);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, this.ctx.currentTime + 0.15);
+    gain.gain.linearRampToValueAtTime(0.06, this.ctx.currentTime + 0.6);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.5);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    source.start();
+    source.onended = () => {
+      source.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
+  }
+
+  /* 胡同氛围 — 深远低频 */
+  startAmbient() {
+    this.init();
+    const id = 'ambient';
+    this.stop(id);
+
+    const bufferSize = this.ctx.sampleRate * 4;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.3;
+    }
+
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(150, this.ctx.currentTime);
+
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(60, this.ctx.currentTime);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.015, this.ctx.currentTime + 2);
+
+    source.connect(lp);
+    lp.connect(hp);
+    hp.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    source.start();
+    this.nodes[id] = { source, gain, lp, hp };
+    this.active[id] = true;
+  }
+
+  stop(id) {
+    this.active[id] = false;
+    if (this.nodes[id]) {
+      try {
+        if (this.nodes[id].osc) { this.nodes[id].osc.stop(); }
+        if (this.nodes[id].source) { this.nodes[id].source.stop(); }
+        if (this.nodes[id].vibrato) { this.nodes[id].vibrato.stop(); }
+        if (this.nodes[id].lfo) { this.nodes[id].lfo.stop(); }
+        if (this.nodes[id].tremolo) { this.nodes[id].tremolo.stop(); }
+      } catch(e) {}
+      delete this.nodes[id];
+    }
+    // Stop grouped nodes (cicadas)
+    Object.keys(this.nodes).forEach(k => {
+      if (k.startsWith(id + '_')) {
+        this.active[id] = false;
+        try {
+          if (this.nodes[k].osc) { this.nodes[k].osc.stop(); }
+          if (this.nodes[k].tremolo) { this.nodes[k].tremolo.stop(); }
+        } catch(e) {}
+        delete this.nodes[k];
+      }
+    });
+  }
+
+  stopAll() {
+    Object.keys(this.active).forEach(id => this.stop(id));
+  }
+
+  setMasterGain(gainValue) {
+    // Adjust all active sounds' gain proportionally
+    // (simplified: we call this when scrolled out of a scene)
+  }
+}
+
+/* ==============================================================
+   Canvas Renderers
+   ============================================================== */
+const audio = new AudioEngine();
+
+/* --- 鸽哨 Canvas --- */
+class PigeonRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.pigeons = [];
+    this.mouseX = window.innerWidth / 2;
+    this.mouseY = window.innerHeight / 3;
+    this.time = 0;
+    this.visible = false;
+    this.init(5);
+    this.resize();
+  }
+
+  init(count) {
+    this.pigeons = [];
+    for (let i = 0; i < count; i++) {
+      this.pigeons.push({
+        angle: (i / count) * Math.PI * 2,
+        radius: 80 + Math.random() * 120,
+        speed: 0.15 + Math.random() * 0.1,
+        offset: Math.random() * Math.PI * 2,
+        size: 6 + Math.random() * 4,
+        flapPhase: Math.random() * Math.PI * 2,
+        flapSpeed: 3 + Math.random() * 2,
+      });
+    }
+  }
+
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
+  update(mouseX, mouseY) {
+    this.mouseX = mouseX || this.mouseX;
+    this.mouseY = mouseY || this.mouseY;
+    this.time += 0.01;
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Center point follows mouse loosely
+    const cx = w * 0.5 + (this.mouseX - w * 0.5) * 0.15;
+    const cy = h * 0.4 + (this.mouseY - h * 0.4) * 0.1;
+
+    // Draw roof silhouette
+    ctx.fillStyle = 'rgba(60, 58, 54, 0.06)';
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.72);
+    for (let x = 0; x <= w; x += 20) {
+      const y = h * 0.72 + Math.sin(x * 0.008) * 15 + Math.sin(x * 0.02) * 5;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw pigeons
+    this.pigeons.forEach(p => {
+      p.angle += p.speed * 0.02;
+      p.flapPhase += 0.03 * p.flapSpeed;
+
+      const driftX = Math.sin(this.time * 0.5 + p.offset) * 30;
+      const driftY = Math.cos(this.time * 0.7 + p.offset) * 15;
+
+      const x = cx + Math.cos(p.angle) * p.radius + driftX;
+      const y = cy + Math.sin(p.angle) * (p.radius * 0.4) + driftY;
+
+      const flap = Math.abs(Math.sin(p.flapPhase)) * p.size * 0.6;
+      const wobble = Math.sin(this.time * 3 + p.offset) * 0.03;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.atan2(
+        Math.cos(p.angle) * p.speed * 0.02 + wobble,
+        Math.sin(p.angle) * p.speed * 0.02
+      ));
+
+      // Wing shape
+      ctx.fillStyle = 'rgba(60, 58, 54, 0.5)';
+      ctx.beginPath();
+      ctx.ellipse(0, -flap * 0.5, p.size * 0.8, flap, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(0, flap * 0.5, p.size * 0.8, flap, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Body
+      ctx.fillStyle = 'rgba(60, 58, 54, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.size * 0.4, p.size * 0.25, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    });
+  }
+
+  start() {
+    this.visible = true;
+    audio.startPigeonWhistle();
+    this._loop();
+  }
+
+  _loop() {
+    if (!this.visible) return;
+    this.draw();
+    requestAnimationFrame(() => this._loop());
+  }
+
+  stop() {
+    this.visible = false;
+    audio.stop('pigeon');
+  }
+
+  onMouseMove(x, y) {
+    this.update(x, y);
+    audio.updatePigeonWhistle(x);
+  }
+}
+
+/* --- 槐荫 Canvas --- */
+class TreeRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.time = 0;
+    this.visible = false;
+    this.breeze = 0;
+    this.leaves = [];
+    this.resize();
+    this.initLeaves();
+  }
+
+  initLeaves() {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    this.leaves = [];
+    for (let i = 0; i < 60; i++) {
+      this.leaves.push({
+        x: Math.random() * w,
+        y: Math.random() * h * 0.5,
+        size: 4 + Math.random() * 8,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.3 + Math.random() * 0.5,
+        sway: 10 + Math.random() * 30,
+        opacity: 0.3 + Math.random() * 0.4,
+      });
+    }
+  }
+
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+    this.initLeaves();
+  }
+
+  updateBreeze(intensity) {
+    this.breeze = Math.max(0, Math.min(1, intensity || 0.5));
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Branch silhouettes
+    ctx.strokeStyle = 'rgba(60, 58, 54, 0.08)';
+    ctx.lineWidth = 3;
+    const branchCount = 8;
+    for (let b = 0; b < branchCount; b++) {
+      const bx = (b / branchCount) * w;
+      ctx.beginPath();
+      ctx.moveTo(bx, h * 0.3);
+      for (let i = 0; i < 5; i++) {
+        const x = bx + Math.sin(i * 1.5 + b + this.time * 0.2) * 30 * this.breeze;
+        const y = h * 0.15 + (i / 5) * h * 0.2;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Dappled light spots on ground
+    for (let i = 0; i < 30; i++) {
+      const x = (i * 137 + 50) % w;
+      const y = h * 0.55 + (i * 89 + 30) % (h * 0.35);
+      const size = 15 + (i * 47 % 25);
+      const sway = Math.sin(this.time * 0.5 + i + this.breeze * 2) * 8 * this.breeze;
+      ctx.fillStyle = `rgba(212, 165, 116, ${0.04 + (i % 5) * 0.012})`;
+      ctx.beginPath();
+      ctx.ellipse(x + sway, y, size * 0.3, size * 0.15, this.breeze * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Leaves
+    this.leaves.forEach(l => {
+      const swayX = Math.sin(this.time * l.speed + l.phase) * l.sway * this.breeze;
+      ctx.fillStyle = `rgba(122, 158, 126, ${l.opacity * (0.6 + 0.4 * (1 - this.breeze * 0.3))})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        l.x + swayX, l.y,
+        l.size * 0.6, l.size * 0.3,
+        this.breeze * 0.3 + Math.sin(this.time + l.phase) * 0.1,
+        0, Math.PI * 2
+      );
+      ctx.fill();
+    });
+
+    this.time += 0.016;
+  }
+
+  start() {
+    this.visible = true;
+    audio.startWind();
+    audio.startCicadas();
+    this._loop();
+  }
+
+  _loop() {
+    if (!this.visible) return;
+    this.draw();
+    requestAnimationFrame(() => this._loop());
+  }
+
+  stop() {
+    this.visible = false;
+    audio.stop('wind');
+    audio.stop('cicadas');
+  }
+
+  onMouseMove(x, y) {
+    const intensity = y / window.innerHeight;
+    this.updateBreeze(intensity);
+  }
+}
+
+/* --- 推门 Canvas --- */
+class DoorRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.openAmount = 0; // 0–1
+    this.targetOpen = 0;
+    this.visible = false;
+    this.time = 0;
+    this.resize();
+  }
+
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
+  toggle() {
+    this.targetOpen = this.targetOpen < 0.5 ? 1 : 0;
+    audio.playDoorCreak();
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Smooth follow
+    this.openAmount += (this.targetOpen - this.openAmount) * 0.05;
+
+    const doorW = w * 0.35;
+    const doorH = h * 0.65;
+    const doorX = (w - doorW) / 2;
+    const doorY = h * 0.25;
+
+    // Door frame
+    ctx.fillStyle = '#3D3A36';
+    ctx.fillRect(doorX - 4, doorY - 4, doorW + 8, doorH + 8);
+
+    // Left door panel
+    const leftW = doorW / 2 * (1 - this.openAmount * 0.4);
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(doorX, doorY, leftW, doorH);
+
+    // Left door detail
+    ctx.fillStyle = '#A0886A';
+    ctx.fillRect(doorX + 8, doorY + 12, leftW - 20, doorH - 24);
+
+    // Door panel lines on left
+    ctx.strokeStyle = 'rgba(60, 58, 54, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(doorX + 12, doorY + 16, leftW - 28, doorH * 0.4 - 20);
+    ctx.strokeRect(doorX + 12, doorY + doorH * 0.4 + 4, leftW - 28, doorH * 0.6 - 28);
+
+    // Right door panel
+    const rightX = doorX + doorW / 2 * (1 + this.openAmount * 0.6);
+    const rightW = doorW / 2 * (1 - this.openAmount * 0.4);
+    ctx.fillStyle = '#7A6850';
+    ctx.fillRect(rightX, doorY, rightW, doorH);
+    ctx.fillStyle = '#8B7355';
+    ctx.fillRect(rightX + 8, doorY + 12, rightW - 20, doorH - 24);
+    ctx.strokeStyle = 'rgba(60, 58, 54, 0.15)';
+    ctx.strokeRect(rightX + 12, doorY + 16, rightW - 28, doorH * 0.4 - 20);
+    ctx.strokeRect(rightX + 12, doorY + doorH * 0.4 + 4, rightW - 28, doorH * 0.6 - 28);
+
+    // Door knocker (center)
+    const knockerX = (doorX + doorW / 2 * (1 - this.openAmount * 0.4) + rightX) / 2;
+    ctx.fillStyle = '#D4A574';
+    ctx.beginPath();
+    ctx.arc(knockerX, doorY + doorH * 0.5, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#C4956A';
+    ctx.beginPath();
+    ctx.arc(knockerX, doorY + doorH * 0.5, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Light from inside (when open)
+    if (this.openAmount > 0.05) {
+      const alpha = this.openAmount * 0.12;
+      ctx.fillStyle = `rgba(212, 165, 116, ${alpha})`;
+      ctx.fillRect(0, 0, w, h);
+
+      // Warm glow in opening
+      const openCenter = (doorX + doorW / 2 * (1 - this.openAmount * 0.4) + rightX) / 2;
+      const glow = ctx.createRadialGradient(openCenter, doorY + doorH * 0.5, 0, openCenter, doorY + doorH * 0.5, doorW * 0.5);
+      glow.addColorStop(0, `rgba(255, 209, 102, ${0.15 * this.openAmount})`);
+      glow.addColorStop(1, 'rgba(255, 209, 102, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // Threshold line
+    ctx.fillStyle = 'rgba(60, 58, 54, 0.2)';
+    ctx.fillRect(doorX - 8, doorY + doorH, doorW + 16, 3);
+
+    this.time += 0.016;
+  }
+
+  start() {
+    this.visible = true;
+    audio.startAmbient();
+    this._loop();
+  }
+
+  _loop() {
+    if (!this.visible) return;
+    this.draw();
+    requestAnimationFrame(() => this._loop());
+  }
+
+  stop() {
+    this.visible = false;
+    audio.stop('ambient');
+  }
+}
+
+/* --- 门墩 Canvas --- */
+class StoneRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.visible = false;
+    this.strokeProgress = 0; // 0–1, increases with mouse proximity
+    this.time = 0;
+    this.mouseOnStone = false;
+    this.storiesRevealed = 0;
+    this.resize();
+  }
+
+  resize() {
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
+  draw() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h * 0.45;
+    const radius = Math.min(w, h) * 0.2;
+
+    // Stone base shadow
+    ctx.fillStyle = 'rgba(60, 58, 54, 0.06)';
+    ctx.beginPath();
+    ctx.ellipse(cx + 4, cy + radius + 8, radius * 0.8, radius * 0.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stone body (drum shape)
+    const gradient = ctx.createRadialGradient(cx - radius*0.2, cy - radius*0.2, 0, cx, cy, radius);
+    gradient.addColorStop(0, '#D4C9BE');
+    gradient.addColorStop(0.3, '#C4B8A8');
+    gradient.addColorStop(0.7, '#B0A090');
+    gradient.addColorStop(1, '#8B7A6A');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, radius, radius * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stone edge details
+    ctx.strokeStyle = 'rgba(139, 122, 106, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - radius * 0.5, radius * 0.85, radius * 0.12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + radius * 0.5, radius * 0.85, radius * 0.12, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Carved pattern (revealed by stroking)
+    if (this.strokeProgress > 0.05) {
+      ctx.save();
+      ctx.globalAlpha = this.strokeProgress;
+
+      // Peony or floral carving
+      ctx.strokeStyle = 'rgba(60, 58, 54, 0.25)';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + this.time * 0.05;
+        const petalR = radius * 0.2 * this.strokeProgress;
+        ctx.beginPath();
+        ctx.ellipse(
+          cx + Math.cos(angle) * radius * 0.3,
+          cy + Math.sin(angle) * radius * 0.2,
+          petalR, petalR * 1.2,
+          angle, 0, Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
+      // Center motif
+      ctx.fillStyle = `rgba(212, 165, 116, ${0.15 * this.strokeProgress})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.15 * this.strokeProgress, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Moss/lichen details
+    for (let i = 0; i < 12; i++) {
+      const angle = i * 0.8 + this.time * 0.02;
+      const dist = radius * (0.6 + Math.sin(i * 2.3) * 0.3);
+      const mx = cx + Math.cos(angle) * dist;
+      const my = cy + Math.sin(angle) * dist * 0.7;
+      ctx.fillStyle = `rgba(122, 158, 126, ${0.08 + Math.sin(i * 1.5) * 0.04})`;
+      ctx.beginPath();
+      ctx.arc(mx, my, 2 + Math.sin(i * 3) * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Wear marks
+    for (let i = 0; i < 5; i++) {
+      const wx = cx + (i - 2) * radius * 0.25;
+      const wy = cy + radius * 0.15;
+      ctx.fillStyle = 'rgba(139, 122, 106, 0.1)';
+      ctx.beginPath();
+      ctx.ellipse(wx, wy + Math.sin(i * 2) * 3, radius * 0.08, radius * 0.02, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    this.time += 0.016;
+  }
+
+  updateStroke(mouseX, mouseY) {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    const cx = w / 2;
+    const cy = h * 0.45;
+    const radius = Math.min(w, h) * 0.2;
+
+    const dx = mouseX - cx;
+    const dy = mouseY - cy;
+    const dist = Math.sqrt(dx * dx + (dy / 0.7) * (dy / 0.7));
+
+    if (dist < radius * 1.3) {
+      this.strokeProgress = Math.min(1, this.strokeProgress + 0.03);
+      this.mouseOnStone = true;
+    } else {
+      this.strokeProgress = Math.max(0, this.strokeProgress - 0.005);
+      this.mouseOnStone = false;
+    }
+  }
+
+  start() {
+    this.visible = true;
+    this._loop();
+  }
+
+  _loop() {
+    if (!this.visible) return;
+    this.draw();
+    requestAnimationFrame(() => this._loop());
+  }
+
+  stop() {
+    this.visible = false;
+  }
+}
+
+/* ==============================================================
+   App — 场景管理与导航
+   ============================================================== */
+class App {
+  constructor() {
+    this.scenes = {};
+    this.currentScene = null;
+    this.container = document.getElementById('scrollContainer');
+    this.dots = document.querySelectorAll('.nav-dot');
+    this.sections = document.querySelectorAll('.section');
+
+    this.scenes.pigeon = new PigeonRenderer(document.getElementById('pigeonCanvas'));
+    this.scenes.tree = new TreeRenderer(document.getElementById('treeCanvas'));
+    this.scenes.door = new DoorRenderer(document.getElementById('doorCanvas'));
+    this.scenes.stone = new StoneRenderer(document.getElementById('stoneCanvas'));
+
+    this.setupEventListeners();
+    this.setupIntersectionObserver();
+  }
+
+  setupEventListeners() {
+    // Dot navigation
+    this.dots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        const index = parseInt(dot.dataset.index);
+        const target = this.sections[index];
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Mouse move — relay to active scene
+    document.addEventListener('mousemove', (e) => {
+      const active = this.getActiveSceneName();
+      if (active && this.scenes[active]) {
+        if (this.scenes[active].onMouseMove) {
+          this.scenes[active].onMouseMove(e.clientX, e.clientY);
+        }
+        // 门墩: relay mouse position
+        if (active === 'stone') {
+          this.scenes.stone.updateStroke(e.clientX, e.clientY);
+        }
+      }
+    });
+
+    // Click on door scene
+    document.getElementById('doorCanvas').addEventListener('click', () => {
+      this.scenes.door.toggle();
+    });
+
+    // Resize
+    window.addEventListener('resize', () => {
+      Object.values(this.scenes).forEach(s => {
+        if (s.resize) s.resize();
+      });
+    });
+  }
+
+  setupIntersectionObserver() {
+    const options = {
+      threshold: 0.5,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const section = entry.target;
+        const scene = section.dataset.scene;
+
+        if (entry.isIntersecting) {
+          section.classList.add('visible');
+          this.onSceneEnter(scene);
+          this.updateActiveDot(scene);
+        } else {
+          section.classList.remove('visible');
+          this.onSceneLeave(scene);
+        }
+      });
+    }, options);
+
+    this.sections.forEach(s => observer.observe(s));
+  }
+
+  onSceneEnter(name) {
+    this.currentScene = name;
+    if (name === 'pigeon') this.scenes.pigeon.start();
+    if (name === 'tree') this.scenes.tree.start();
+    if (name === 'door') this.scenes.door.start();
+    if (name === 'stone') this.scenes.stone.start();
+  }
+
+  onSceneLeave(name) {
+    if (name === 'pigeon') this.scenes.pigeon.stop();
+    if (name === 'tree') this.scenes.tree.stop();
+    if (name === 'door') this.scenes.door.stop();
+    if (name === 'stone') this.scenes.stone.stop();
+  }
+
+  getActiveSceneName() {
+    // Find which scene section is currently most visible
+    let maxRatio = 0;
+    let activeName = null;
+    this.sections.forEach(s => {
+      const rect = s.getBoundingClientRect();
+      const windowH = window.innerHeight;
+      const visible = Math.max(0, Math.min(rect.bottom, windowH) - Math.max(rect.top, 0));
+      const ratio = visible / windowH;
+      if (ratio > maxRatio) {
+        maxRatio = ratio;
+        activeName = s.dataset.scene;
+      }
+    });
+    return activeName;
+  }
+
+  updateActiveDot(sceneName) {
+    const sceneMap = { hero: 0, pigeon: 1, tree: 2, door: 3, stone: 4, footer: 5 };
+    const index = sceneMap[sceneName];
+    this.dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === index);
+    });
+  }
+}
+
+// ===== Start =====
+document.addEventListener('DOMContentLoaded', () => {
+  const app = new App();
+});
+</script>
+</body>
+</html>

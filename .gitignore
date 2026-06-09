@@ -1,0 +1,21 @@
+# Obsidian workspace（个人布局，不同步）
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+.obsidian/plugins/*/main.js
+.obsidian/plugins/*/styles.css
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Claude session files
+.claude/
+.claudian/
+
+# lark-cli skills（各机器独立安装）
+.agents/
+
+# 其他系统文件
+cookies.json
+skills-lock.json
